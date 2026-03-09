@@ -34,14 +34,26 @@
             visibility: hidden !important;
             transition: opacity 0.5s ease;
         }
+
+        .error-box {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            max-width: 80%;
+            text-align: center;
+            margin-top: 1rem;
+        }
     </style>
 </head>
 <body class="mesh-bg min-h-screen text-slate-900 antialiased p-4">
 
     <!-- Loading Screen -->
     <div id="auth-loading">
-        <div class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+        <div id="loading-spinner" class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
         <p id="loading-text" class="text-xs font-bold text-slate-400 animate-pulse uppercase tracking-widest">Menghubungkan ke Database...</p>
+        <div id="connection-error" class="hidden error-box"></div>
     </div>
 
     <!-- SCREEN 1: SELECTION -->
@@ -177,7 +189,6 @@
         import { getFirestore, doc, setDoc, collection, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-        // Konfigurasi Firebase
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
         const appId = typeof __app_id !== 'undefined' ? __app_id : "osis-v3-final";
         
@@ -186,36 +197,52 @@
         let voters = [];
         let currentUserData = null;
 
-        // Inisialisasi Aplikasi
-        const app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        auth = getAuth(app);
+        const errorEl = document.getElementById('connection-error');
+        const loadingText = document.getElementById('loading-text');
 
-        // Memantau status Auth
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log("Authenticated as:", user.uid);
-                setupSync();
-                document.getElementById('auth-loading').classList.add('loading-hidden');
-                document.getElementById('view-selection').classList.remove('hidden');
-            }
-        });
+        // Batas waktu inisialisasi (10 detik)
+        const timeout = setTimeout(() => {
+            errorEl.innerText = "Koneksi lambat atau bermasalah. Pastikan config Firebase sudah benar dan cek jaringan Anda.";
+            errorEl.classList.remove('hidden');
+            document.getElementById('loading-spinner').classList.add('hidden');
+        }, 10000);
 
-        // Proses Sign-In
-        async function performLogin() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    clearTimeout(timeout);
+                    setupSync();
+                    document.getElementById('auth-loading').classList.add('loading-hidden');
+                    document.getElementById('view-selection').classList.remove('hidden');
                 }
-            } catch (err) {
-                console.error("Auth Error:", err);
-                document.getElementById('loading-text').innerText = "Gagal Masuk: " + err.message;
-            }
-        }
+            }, (err) => {
+                errorEl.innerText = "Auth Error: " + err.message;
+                errorEl.classList.remove('hidden');
+            });
 
-        performLogin();
+            async function performLogin() {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (err) {
+                    errorEl.innerText = "Gagal Login Anonim: " + err.message;
+                    errorEl.classList.remove('hidden');
+                }
+            }
+
+            performLogin();
+
+        } catch (globalErr) {
+            errorEl.innerText = "Kritis Error: " + globalErr.message;
+            errorEl.classList.remove('hidden');
+        }
 
         function setupSync() {
             const candCol = collection(db, 'artifacts', appId, 'public', 'data', 'candidates');
@@ -244,9 +271,9 @@
         document.getElementById('btn-submit-login').onclick = async () => {
             const userVal = document.getElementById('login-user').value.trim();
             const passVal = document.getElementById('login-pass').value.trim();
-            const errorEl = document.getElementById('login-error');
+            const logErr = document.getElementById('login-error');
             
-            errorEl.classList.add('hidden');
+            logErr.classList.add('hidden');
             if(!userVal || !passVal) return;
 
             if(window.currentRole === 'admin') {
@@ -254,8 +281,8 @@
                     document.getElementById('view-login').classList.add('hidden');
                     document.getElementById('view-admin').classList.remove('hidden');
                 } else {
-                    errorEl.innerText = "Username/Password Admin Salah!";
-                    errorEl.classList.remove('hidden');
+                    logErr.innerText = "Username/Password Admin Salah!";
+                    logErr.classList.remove('hidden');
                 }
             } else {
                 const voter = voters.find(v => v.nisn === userVal && v.password === passVal);
@@ -266,8 +293,8 @@
                     document.getElementById('voter-name-display').innerText = voter.name;
                     renderVoterUI();
                 } else {
-                    errorEl.innerText = "NISN atau Password Salah!";
-                    errorEl.classList.remove('hidden');
+                    logErr.innerText = "NISN atau Password Salah!";
+                    logErr.classList.remove('hidden');
                 }
             }
         };
@@ -338,7 +365,7 @@
                             <div class="bg-indigo-600 h-full" style="width:${p}%"></div>
                         </div>
                     </div>`;
-                }).join('') || '<p class="text-xs text-center text-slate-400 py-4 uppercase font-bold">Kosong</p>';
+                }).join('') || '<p class="text-xs text-center text-slate-400 py-4 uppercase font-bold">Belum ada kandidat</p>';
             }
             const list = document.getElementById('admin-voter-list');
             if(list) {
@@ -347,7 +374,7 @@
                         <span><b>${v.name}</b><br>${v.nisn}</span>
                         <span class="${v.hasVoted ? 'text-green-500' : 'text-slate-300'} font-black">${v.hasVoted ? 'SUDAH' : 'BELUM'}</span>
                     </div>
-                `).join('') || '<p class="text-xs text-center text-slate-400 py-4">Kosong</p>';
+                `).join('') || '<p class="text-xs text-center text-slate-400 py-4">Belum ada pemilih</p>';
             }
         }
 
