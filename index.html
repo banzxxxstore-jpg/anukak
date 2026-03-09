@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Voting OSIS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+    <div id="app" class="max-w-6xl mx-auto p-4">
+        <!-- Login Section -->
+        <div id="login-section" class="flex flex-col items-center justify-center min-h-[80vh]">
+            <div class="glass p-8 rounded-2xl shadow-xl w-full max-w-md border border-white">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold text-indigo-600">E-VOTING OSIS</h1>
+                    <p class="text-gray-500 text-sm">Silahkan login untuk melanjutkan</p>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Username / NISN</label>
+                        <input type="text" id="login-username" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" id="login-password" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                    </div>
+                    <button onclick="handleLogin()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200">
+                        Masuk
+                    </button>
+                    <div id="login-error" class="hidden text-red-500 text-sm text-center font-medium mt-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Admin -->
+        <div id="admin-dashboard" class="hidden animate-fade-in">
+            <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm">
+                <h2 class="text-2xl font-bold text-gray-800">Panel Admin OSIS</h2>
+                <button onclick="logout()" class="text-red-500 font-semibold hover:underline">Keluar</button>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Statistik -->
+                <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="bg-indigo-600 text-white p-6 rounded-2xl shadow-md">
+                        <p class="text-indigo-100 text-sm">Total Pemilih</p>
+                        <h3 id="stat-total-pemilih" class="text-3xl font-bold">0</h3>
+                    </div>
+                    <div class="bg-emerald-500 text-white p-6 rounded-2xl shadow-md">
+                        <p class="text-emerald-100 text-sm">Sudah Voting</p>
+                        <h3 id="stat-sudah-voting" class="text-3xl font-bold">0</h3>
+                    </div>
+                    <div class="bg-orange-500 text-white p-6 rounded-2xl shadow-md">
+                        <p class="text-orange-100 text-sm">Total Kandidat</p>
+                        <h3 id="stat-total-kandidat" class="text-3xl font-bold">0</h3>
+                    </div>
+                </div>
+
+                <!-- Input Kandidat -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-bold mb-4 text-gray-700">Input Kandidat</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="cand-name" placeholder="Nama Kandidat" class="w-full p-2 border rounded-lg">
+                        <input type="text" id="cand-photo" placeholder="URL Foto (Opsional)" class="w-full p-2 border rounded-lg">
+                        <textarea id="cand-vision" placeholder="Visi & Misi" class="w-full p-2 border rounded-lg h-24"></textarea>
+                        <button onclick="addCandidate()" class="w-full bg-indigo-100 text-indigo-700 font-bold py-2 rounded-lg hover:bg-indigo-200">Simpan Kandidat</button>
+                    </div>
+                    <div class="mt-6">
+                        <h4 class="font-bold text-sm text-gray-500 uppercase mb-3">Daftar Kandidat</h4>
+                        <div id="admin-cand-list" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <!-- Input Pemilih -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-bold mb-4 text-gray-700">Input Pemilih</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="voter-name" placeholder="Nama Siswa" class="w-full p-2 border rounded-lg">
+                        <input type="text" id="voter-class" placeholder="Kelas" class="w-full p-2 border rounded-lg">
+                        <input type="text" id="voter-nisn" placeholder="NISN" class="w-full p-2 border rounded-lg">
+                        <input type="password" id="voter-pass" placeholder="Password Akun" class="w-full p-2 border rounded-lg">
+                        <button onclick="addVoter()" class="w-full bg-indigo-100 text-indigo-700 font-bold py-2 rounded-lg hover:bg-indigo-200">Tambah Pemilih</button>
+                    </div>
+                </div>
+
+                <!-- Hasil Perolehan Suara -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-bold mb-4 text-gray-700">Perolehan Suara</h3>
+                    <div id="admin-vote-results" class="space-y-4"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Siswa / Voting Section -->
+        <div id="voter-menu" class="hidden animate-fade-in">
+            <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">Halo, <span id="user-display-name">Siswa</span></h2>
+                    <p class="text-sm text-gray-500">Silahkan pilih kandidat favoritmu!</p>
+                </div>
+                <button onclick="logout()" class="text-red-500 font-semibold hover:underline">Keluar</button>
+            </header>
+
+            <div id="already-voted-msg" class="hidden bg-emerald-100 border border-emerald-200 text-emerald-700 p-6 rounded-2xl text-center mb-8">
+                <p class="font-bold text-lg">Terima kasih!</p>
+                <p>Anda sudah menggunakan hak suara Anda dalam pemilihan ini.</p>
+            </div>
+
+            <div id="voter-cand-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Cards Kandidat akan dirender di sini -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Utama -->
+    <script>
+        // State Management (In-Memory)
+        // Note: Untuk produksi, ini bisa diintegrasikan dengan Firestore sesuai instruksi teknis
+        let candidates = JSON.parse(localStorage.getItem('osis_candidates')) || [];
+        let voters = JSON.parse(localStorage.getItem('osis_voters')) || [];
+        let currentUser = null;
+
+        const ADMIN_CRED = { username: 'admin', password: 'adminosis2024' };
+
+        function saveData() {
+            localStorage.setItem('osis_candidates', JSON.stringify(candidates));
+            localStorage.setItem('osis_voters', JSON.stringify(voters));
+            renderAdminDashboard();
+            renderVoterMenu();
+        }
+
+        // --- AUTH LOGIC ---
+        function handleLogin() {
+            const userIn = document.getElementById('login-username').value;
+            const passIn = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+
+            // Admin Login
+            if (userIn === ADMIN_CRED.username && passIn === ADMIN_CRED.password) {
+                currentUser = { role: 'admin', name: 'Administrator' };
+                showView('admin-dashboard');
+                renderAdminDashboard();
+                return;
+            }
+
+            // Voter Login
+            const voter = voters.find(v => v.nisn === userIn && v.password === passIn);
+            if (voter) {
+                currentUser = { ...voter, role: 'voter' };
+                document.getElementById('user-display-name').innerText = voter.name;
+                showView('voter-menu');
+                renderVoterMenu();
+            } else {
+                errorEl.innerText = "NISN atau Password salah!";
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            showView('login-section');
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+        }
+
+        function showView(viewId) {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('admin-dashboard').classList.add('hidden');
+            document.getElementById('voter-menu').classList.add('hidden');
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        // --- ADMIN ACTIONS ---
+        function addCandidate() {
+            const name = document.getElementById('cand-name').value;
+            const photo = document.getElementById('cand-photo').value || 'https://via.placeholder.com/150';
+            const vision = document.getElementById('cand-vision').value;
+
+            if (!name || !vision) return alert('Nama dan Visi Misi harus diisi!');
+
+            candidates.push({
+                id: Date.now(),
+                name,
+                photo,
+                vision,
+                votes: 0
+            });
+
+            document.getElementById('cand-name').value = '';
+            document.getElementById('cand-vision').value = '';
+            saveData();
+        }
+
+        function deleteCandidate(id) {
+            candidates = candidates.filter(c => c.id !== id);
+            saveData();
+        }
+
+        function addVoter() {
+            const name = document.getElementById('voter-name').value;
+            const className = document.getElementById('voter-class').value;
+            const nisn = document.getElementById('voter-nisn').value;
+            const pass = document.getElementById('voter-pass').value;
+
+            if (!name || !nisn || !pass) return alert('Data pemilih belum lengkap!');
+            
+            if (voters.find(v => v.nisn === nisn)) return alert('NISN sudah terdaftar!');
+
+            voters.push({ name, className, nisn, password: pass, hasVoted: false });
+            
+            document.getElementById('voter-name').value = '';
+            document.getElementById('voter-nisn').value = '';
+            document.getElementById('voter-pass').value = '';
+            saveData();
+        }
+
+        // --- VOTER ACTIONS ---
+        function castVote(candId) {
+            const voterIndex = voters.findIndex(v => v.nisn === currentUser.nisn);
+            if (voters[voterIndex].hasVoted) return;
+
+            const candIndex = candidates.findIndex(c => c.id === candId);
+            candidates[candIndex].votes += 1;
+            voters[voterIndex].hasVoted = true;
+
+            alert('Suara Anda berhasil dikirim!');
+            saveData();
+            renderVoterMenu();
+        }
+
+        // --- RENDERING ---
+        function renderAdminDashboard() {
+            // Stats
+            document.getElementById('stat-total-pemilih').innerText = voters.length;
+            document.getElementById('stat-sudah-voting').innerText = voters.filter(v => v.hasVoted).length;
+            document.getElementById('stat-total-kandidat').innerText = candidates.length;
+
+            // Candidate List
+            const list = document.getElementById('admin-cand-list');
+            list.innerHTML = candidates.map(c => `
+                <div class="flex justify-between items-center p-2 bg-slate-50 rounded border">
+                    <span class="text-sm font-medium">${c.name}</span>
+                    <button onclick="deleteCandidate(${c.id})" class="text-xs text-red-500 hover:font-bold">Hapus</button>
+                </div>
+            `).join('');
+
+            // Results
+            const totalVotes = voters.filter(v => v.hasVoted).length || 1;
+            const results = document.getElementById('admin-vote-results');
+            results.innerHTML = candidates.map(c => {
+                const percent = Math.round((c.votes / totalVotes) * 100);
+                return `
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="font-bold">${c.name}</span>
+                        <span>${c.votes} Suara (${percent}%)</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-indigo-600 h-2 rounded-full" style="width: ${percent}%"></div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function renderVoterMenu() {
+            if (!currentUser || currentUser.role !== 'voter') return;
+
+            const voterData = voters.find(v => v.nisn === currentUser.nisn);
+            const container = document.getElementById('voter-cand-list');
+            const votedMsg = document.getElementById('already-voted-msg');
+
+            if (voterData.hasVoted) {
+                container.classList.add('opacity-50', 'pointer-events-none');
+                votedMsg.classList.remove('hidden');
+            } else {
+                container.classList.remove('opacity-50', 'pointer-events-none');
+                votedMsg.classList.add('hidden');
+            }
+
+            container.innerHTML = candidates.map(c => `
+                <div class="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 flex flex-col">
+                    <img src="${c.photo}" alt="${c.name}" class="w-full h-48 object-cover">
+                    <div class="p-6 flex-grow">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">${c.name}</h3>
+                        <p class="text-sm text-gray-600 whitespace-pre-line mb-4">${c.vision}</p>
+                    </div>
+                    <div class="p-6 pt-0">
+                        <button onclick="castVote(${c.id})" 
+                            class="w-full ${voterData.hasVoted ? 'bg-gray-300' : 'bg-indigo-600 hover:bg-indigo-700'} text-white font-bold py-3 rounded-2xl transition-all shadow-md">
+                            ${voterData.hasVoted ? 'Sudah Memilih' : 'Pilih Calon Ini'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
