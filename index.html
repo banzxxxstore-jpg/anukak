@@ -49,14 +49,14 @@
 </head>
 <body class="mesh-bg min-h-screen text-slate-900 antialiased p-4">
 
-    <!-- Loading Screen -->
+    <!-- Layar Loading -->
     <div id="auth-loading">
         <div id="loading-spinner" class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
         <p id="loading-text" class="text-xs font-bold text-slate-400 animate-pulse uppercase tracking-widest">Menghubungkan ke Database...</p>
         <div id="connection-error" class="hidden error-box"></div>
     </div>
 
-    <!-- SCREEN 1: SELECTION -->
+    <!-- SCREEN 1: PILIHAN MASUK -->
     <div id="view-selection" class="hidden min-h-[90vh] flex flex-col items-center justify-center space-y-6 max-w-sm mx-auto">
         <div class="text-center mb-8">
             <div class="w-24 h-24 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-indigo-100 border border-slate-50 overflow-hidden p-2">
@@ -83,7 +83,7 @@
         </button>
     </div>
 
-    <!-- SCREEN 2: LOGIN FORM -->
+    <!-- SCREEN 2: FORM LOGIN -->
     <div id="view-login" class="hidden min-h-[90vh] flex items-center justify-center">
         <div id="login-card" class="p-8 rounded-[3rem] shadow-2xl w-full max-w-sm border transition-all duration-300">
             <button type="button" onclick="backToSelection()" class="text-xs font-bold mb-6 block text-inherit opacity-50 hover:opacity-100">← Kembali</button>
@@ -97,7 +97,7 @@
         </div>
     </div>
 
-    <!-- SCREEN 3: VOTER PANEL -->
+    <!-- SCREEN 3: PANEL PEMILIH -->
     <div id="view-voter" class="hidden max-w-md mx-auto py-8">
         <header class="flex justify-between items-center mb-8 px-4 bg-white p-6 rounded-[2rem] shadow-sm border border-white">
             <div>
@@ -109,7 +109,7 @@
         <div id="voter-candidates" class="space-y-6 px-2"></div>
     </div>
 
-    <!-- SCREEN 4: ADMIN PANEL -->
+    <!-- SCREEN 4: PANEL ADMIN -->
     <div id="view-admin" class="hidden max-w-5xl mx-auto py-6">
         <div class="flex justify-between items-center bg-white p-4 rounded-3xl shadow-sm border border-white mb-8 px-6">
             <h2 class="font-black text-slate-800 uppercase text-xs tracking-widest italic">Dashboard Admin</h2>
