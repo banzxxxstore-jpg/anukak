@@ -7,72 +7,92 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; overflow-x: hidden; }
         .mesh-bg {
             background-image: radial-gradient(at 0% 0%, hsla(230,100%,97%,1) 0, transparent 50%), 
                               radial-gradient(at 100% 100%, hsla(230,100%,97%,1) 0, transparent 50%);
         }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         
-        .logo-container img {
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
+        button { cursor: pointer; touch-action: manipulation; transition: all 0.2s ease; }
+        button:active { transform: scale(0.95); }
+        
+        #auth-loading {
+            position: fixed;
+            inset: 0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            pointer-events: all;
         }
-        .logo-container img.loaded {
-            opacity: 1;
+        
+        .loading-hidden {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            visibility: hidden !important;
         }
-        button { cursor: pointer; touch-action: manipulation; }
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+
+        .candidate-img {
+            width: 100%;
+            height: 100%;
+            object-cover: cover;
+            transition: opacity 0.3s;
+        }
     </style>
 </head>
 <body class="mesh-bg min-h-screen text-slate-900 antialiased p-4">
 
+    <!-- Loading Screen -->
+    <div id="auth-loading">
+        <div class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+        <p class="text-xs font-bold text-slate-400 animate-pulse uppercase tracking-widest">Sinkronisasi Data...</p>
+    </div>
+
     <!-- SCREEN 1: SELECTION -->
-    <div id="view-selection" class="min-h-[90vh] flex flex-col items-center justify-center space-y-6 max-w-sm mx-auto">
+    <div id="view-selection" class="hidden min-h-[90vh] flex flex-col items-center justify-center space-y-6 max-w-sm mx-auto">
         <div class="text-center mb-8">
-            <div class="logo-container w-24 h-24 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-indigo-100 border border-slate-50 overflow-hidden p-2">
+            <div class="w-24 h-24 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-indigo-100 border border-slate-50 overflow-hidden p-2">
                 <img 
                     src="https://image2url.com/r2/default/images/1773086135107-af77e79b-7c0b-4f47-86c4-1df916de34df.png" 
-                    alt="Logo OSIS" 
+                    alt="Logo" 
                     class="w-full h-full object-contain"
-                    onload="this.classList.add('loaded')"
                     onerror="this.src='https://ui-avatars.com/api/?name=OSIS&background=6366f1&color=fff'"
                 >
             </div>
-            <h1 class="text-3xl font-black tracking-tighter uppercase italic">E-VOTE <span class="text-indigo-600">OSIS</span></h1>
-            <p class="text-slate-400 text-sm font-medium">Sistem Pemilihan Digital Terpercaya</p>
+            <h1 class="text-3xl font-black tracking-tighter uppercase italic text-slate-900">E-VOTE <span class="text-indigo-600">OSIS</span></h1>
+            <p class="text-slate-400 text-sm font-medium">Pemilihan Ketua & Wakil Ketua</p>
         </div>
 
-        <button type="button" onclick="showLogin('voter')" class="w-full bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-white flex items-center gap-5 hover:scale-[1.02] active:scale-95 transition-all">
+        <button type="button" onclick="showLogin('voter')" class="w-full bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-white flex items-center gap-5 hover:bg-slate-50">
             <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl">👤</div>
             <div class="text-left">
                 <h3 class="font-black text-slate-800">Masuk Siswa</h3>
-                <p class="text-xs text-slate-400">Gunakan NISN untuk memilih</p>
+                <p class="text-xs text-slate-400">Gunakan NISN</p>
             </div>
         </button>
 
-        <button type="button" onclick="showLogin('admin')" class="w-full bg-slate-900 p-6 rounded-[2.5rem] shadow-xl shadow-slate-900/10 border border-slate-700 flex items-center gap-5 hover:scale-[1.02] active:scale-95 transition-all text-white">
+        <button type="button" onclick="showLogin('admin')" class="w-full bg-slate-900 p-6 rounded-[2.5rem] shadow-xl shadow-slate-900/10 border border-slate-700 flex items-center gap-5 text-white hover:bg-black">
             <div class="w-14 h-14 bg-slate-800 text-indigo-400 rounded-2xl flex items-center justify-center text-2xl">⚙️</div>
             <div class="text-left">
                 <h3 class="font-black text-white">Masuk Admin</h3>
-                <p class="text-xs text-slate-400">Kelola data & hasil</p>
+                <p class="text-xs text-slate-400">Kelola Data</p>
             </div>
         </button>
     </div>
 
     <!-- SCREEN 2: LOGIN FORM -->
     <div id="view-login" class="hidden min-h-[90vh] flex items-center justify-center">
-        <div id="login-card" class="p-8 rounded-[3.5rem] shadow-2xl w-full max-w-sm border transition-colors duration-500">
-            <button type="button" onclick="backToSelection()" class="text-xs font-bold mb-6 block" id="btn-back">← Kembali</button>
+        <div id="login-card" class="p-8 rounded-[3rem] shadow-2xl w-full max-w-sm border transition-all duration-300">
+            <button type="button" onclick="backToSelection()" class="text-xs font-bold mb-6 block text-inherit opacity-50 hover:opacity-100">← Kembali</button>
             <h2 class="text-2xl font-black mb-2" id="login-title">Portal Login</h2>
-            <p class="text-xs mb-8 opacity-60" id="login-subtitle">Silahkan masukkan kredensial Anda</p>
-            
             <div class="space-y-4">
                 <input id="login-user" type="text" placeholder="Username" class="w-full p-4 rounded-2xl border-none outline-none focus:ring-2 transition-all font-bold shadow-sm">
                 <input id="login-pass" type="password" placeholder="Password" class="w-full p-4 rounded-2xl border-none outline-none focus:ring-2 transition-all font-bold shadow-sm">
                 <p id="login-error" class="hidden text-red-500 text-[10px] font-bold text-center bg-red-50 p-2 rounded-lg"></p>
-                <button type="button" id="btn-submit-login" class="w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all">Masuk Sekarang</button>
+                <button type="button" id="btn-submit-login" class="w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all">Masuk</button>
             </div>
         </div>
     </div>
@@ -81,7 +101,7 @@
     <div id="view-voter" class="hidden max-w-md mx-auto py-8">
         <header class="flex justify-between items-center mb-8 px-4 bg-white p-6 rounded-[2rem] shadow-sm border border-white">
             <div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Pemilih</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Pemilih Aktif</p>
                 <h2 id="voter-name-display" class="text-xl font-black text-slate-800 tracking-tighter">-</h2>
             </div>
             <button type="button" onclick="logout()" class="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center font-bold">✕</button>
@@ -92,104 +112,91 @@
     <!-- SCREEN 4: ADMIN PANEL -->
     <div id="view-admin" class="hidden max-w-5xl mx-auto py-6">
         <div class="flex justify-between items-center bg-white p-4 rounded-3xl shadow-sm border border-white mb-8 px-6">
-            <h2 class="font-black text-slate-800 uppercase text-xs tracking-widest italic">Dashboard Administrator</h2>
+            <h2 class="font-black text-slate-800 uppercase text-xs tracking-widest italic">Dashboard Admin</h2>
             <button type="button" onclick="logout()" class="text-xs font-bold text-red-400 hover:bg-red-50 px-3 py-1 rounded-lg">Log Out</button>
         </div>
-
         <div class="grid md:grid-cols-2 gap-8">
             <div class="space-y-6">
                 <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-white">
-                    <h3 class="font-black text-[10px] text-slate-400 uppercase mb-4 tracking-widest">Input Kandidat Baru</h3>
+                    <h3 class="font-black text-[10px] text-slate-400 uppercase mb-4 tracking-widest">Tambah Kandidat</h3>
                     <div class="space-y-3">
-                        <input id="c-name" placeholder="Nama Lengkap" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold outline-none focus:ring-2 ring-indigo-100">
-                        <input id="c-photo" placeholder="URL Foto (Opsional)" class="w-full p-3 bg-slate-50 rounded-xl text-xs outline-none focus:ring-2 ring-indigo-100">
-                        <textarea id="c-vision" placeholder="Visi & Misi Singkat" class="w-full p-3 bg-slate-50 rounded-xl text-xs outline-none h-20 focus:ring-2 ring-indigo-100"></textarea>
-                        <button id="btn-save-candidate" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold text-[10px] uppercase shadow-lg shadow-indigo-100">Simpan Calon</button>
+                        <input id="c-name" placeholder="Nama Lengkap" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold outline-none">
+                        <input id="c-photo" placeholder="URL Foto (Opsional)" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold outline-none">
+                        <textarea id="c-vision" placeholder="Visi & Misi" class="w-full p-3 bg-slate-50 rounded-xl text-xs outline-none h-20"></textarea>
+                        <button id="btn-save-candidate" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold text-[10px] uppercase">Simpan Kandidat</button>
                     </div>
                 </div>
                 <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-white">
-                    <h3 class="font-black text-[10px] text-slate-400 uppercase mb-4 tracking-widest">Statistik Hasil Suara</h3>
+                    <h3 class="font-black text-[10px] text-slate-400 uppercase mb-4 tracking-widest">Hasil Perolehan Suara</h3>
                     <div id="admin-vote-stats" class="space-y-4"></div>
                 </div>
             </div>
-
             <div class="space-y-6">
                 <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-white">
-                    <h3 class="font-black text-[10px] text-slate-400 uppercase mb-4 tracking-widest">Registrasi Pemilih</h3>
+                    <h3 class="font-black text-[10px] text-slate-400 uppercase mb-4 tracking-widest">Daftarkan Siswa</h3>
                     <div class="space-y-3 mb-6">
-                        <input id="v-name" placeholder="Nama Lengkap Siswa" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold outline-none">
-                        <div class="grid grid-cols-2 gap-2">
-                            <input id="v-nisn" type="number" placeholder="NISN" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold outline-none">
-                            <input id="v-pass" placeholder="Password" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold outline-none">
-                        </div>
-                        <button id="btn-save-voter" class="w-full bg-slate-900 text-white p-3 rounded-xl font-bold text-[10px] uppercase">Daftarkan Pemilih</button>
+                        <input id="v-name" placeholder="Nama Siswa" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold outline-none">
+                        <input id="v-nisn" type="number" placeholder="NISN" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold outline-none">
+                        <input id="v-pass" placeholder="Password" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold outline-none">
+                        <button id="btn-save-voter" class="w-full bg-slate-900 text-white p-3 rounded-xl font-bold text-[10px] uppercase">Daftarkan</button>
                     </div>
-                    <div class="flex justify-between items-center mb-3">
-                        <h4 class="font-black text-[9px] text-slate-400 uppercase">Daftar Pemilih Terdaftar</h4>
-                        <span id="voter-count" class="text-[9px] font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-500">0</span>
-                    </div>
-                    <div id="admin-voter-list" class="max-h-80 overflow-y-auto space-y-2 custom-scroll pr-2"></div>
+                    <div id="admin-voter-list" class="max-h-80 overflow-y-auto space-y-2 pr-2"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        let currentRole = null;
-
-        function showLogin(role) {
-            currentRole = role;
-            const card = document.getElementById('login-card');
-            const title = document.getElementById('login-title');
-            const sub = document.getElementById('login-subtitle');
-            const userInput = document.getElementById('login-user');
-            const submitBtn = document.getElementById('btn-submit-login');
-            const backBtn = document.getElementById('btn-back');
-
+        /** GLOBAL NAVIGATION **/
+        window.showLogin = function(role) {
+            window.currentRole = role;
             document.getElementById('view-selection').classList.add('hidden');
             document.getElementById('view-login').classList.remove('hidden');
+            
+            const card = document.getElementById('login-card');
+            const title = document.getElementById('login-title');
+            const userIn = document.getElementById('login-user');
+            const passIn = document.getElementById('login-pass');
+            const subBtn = document.getElementById('btn-submit-login');
 
             if(role === 'admin') {
-                card.className = "bg-slate-900 p-8 rounded-[3.5rem] shadow-2xl w-full max-w-sm border border-slate-800 text-white";
+                card.className = "bg-slate-900 p-8 rounded-[3rem] shadow-2xl w-full max-w-sm text-white";
                 title.innerText = "Admin Portal";
-                sub.innerText = "Masukkan akses otoritas panitia";
-                userInput.placeholder = "Username Admin";
-                userInput.type = "text"; 
-                userInput.className = "w-full p-4 bg-slate-800 text-white rounded-2xl border-none outline-none focus:ring-2 ring-indigo-500 font-bold";
-                document.getElementById('login-pass').className = "w-full p-4 bg-slate-800 text-white rounded-2xl border-none outline-none focus:ring-2 ring-indigo-500 font-bold";
-                submitBtn.className = "w-full bg-white text-slate-900 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-400 transition-all";
-                backBtn.className = "text-xs font-bold text-slate-500 mb-6 hover:text-white block";
+                userIn.className = "w-full p-4 bg-slate-800 text-white rounded-2xl border-none outline-none focus:ring-2 ring-indigo-500 font-bold";
+                passIn.className = "w-full p-4 bg-slate-800 text-white rounded-2xl border-none outline-none focus:ring-2 ring-indigo-500 font-bold";
+                subBtn.className = "w-full bg-white text-slate-900 py-4 rounded-2xl font-black text-xs uppercase tracking-widest";
             } else {
-                card.className = "bg-white p-8 rounded-[3.5rem] shadow-2xl w-full max-w-sm border border-white text-slate-800";
+                card.className = "bg-white p-8 rounded-[3rem] shadow-2xl w-full max-w-sm text-slate-800 border-white";
                 title.innerText = "Portal Siswa";
-                sub.innerText = "Gunakan NISN untuk memberikan suara";
-                userInput.placeholder = "NISN Anda";
-                userInput.type = "number"; 
-                userInput.className = "w-full p-4 bg-slate-50 text-slate-800 rounded-2xl border-none outline-none focus:ring-2 ring-indigo-200 font-bold";
-                document.getElementById('login-pass').className = "w-full p-4 bg-slate-50 text-slate-800 rounded-2xl border-none outline-none focus:ring-2 ring-indigo-200 font-bold";
-                submitBtn.className = "w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100";
-                backBtn.className = "text-xs font-bold text-slate-400 mb-6 hover:text-indigo-600 block";
+                userIn.className = "w-full p-4 bg-slate-50 text-slate-800 rounded-2xl border-none outline-none focus:ring-2 ring-indigo-200 font-bold";
+                passIn.className = "w-full p-4 bg-slate-50 text-slate-800 rounded-2xl border-none outline-none focus:ring-2 ring-indigo-200 font-bold";
+                subBtn.className = "w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-100";
             }
-        }
+        };
 
-        function backToSelection() {
+        window.backToSelection = function() {
             document.getElementById('view-login').classList.add('hidden');
             document.getElementById('view-selection').classList.remove('hidden');
-            document.getElementById('login-error').classList.add('hidden');
-        }
+        };
 
-        function logout() {
-            location.reload();
-        }
+        window.logout = function() { location.reload(); };
+
+        setTimeout(() => {
+            const loader = document.getElementById('auth-loading');
+            if (loader && !loader.classList.contains('loading-hidden')) {
+                loader.classList.add('loading-hidden');
+                document.getElementById('view-selection').classList.remove('hidden');
+            }
+        }, 4000);
     </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, collection, onSnapshot, updateDoc, deleteDoc, query, runTransaction } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, collection, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const appId = typeof __app_id !== 'undefined' ? __app_id : "osis-prod-v3";
+        const appId = typeof __app_id !== 'undefined' ? __app_id : "osis-v3-prod";
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
@@ -197,31 +204,40 @@
         let candidates = [];
         let voters = [];
         let currentUserData = null;
-        let unsubscribeCandidates = null;
-        let unsubscribeVoters = null;
 
-        const initApp = async () => {
+        /** AUTH **/
+        const initAuth = async () => {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
-            } catch (err) { console.error("Auth Error:", err); }
+            } catch (err) { hideLoading(); }
         };
 
         onAuthStateChanged(auth, (user) => {
-            if (!user) return;
-            if (unsubscribeCandidates) unsubscribeCandidates();
-            if (unsubscribeVoters) unsubscribeVoters();
+            if (user) {
+                startSync();
+                hideLoading();
+            }
+        });
 
-            unsubscribeCandidates = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'candidates'), (snap) => {
+        initAuth();
+
+        function hideLoading() {
+            document.getElementById('auth-loading').classList.add('loading-hidden');
+            document.getElementById('view-selection').classList.remove('hidden');
+        }
+
+        /** DATA SYNC **/
+        function startSync() {
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'candidates'), (snap) => {
                 candidates = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderAdminUI();
                 if(currentUserData) renderVoterUI();
             });
-
-            unsubscribeVoters = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'voters'), (snap) => {
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'voters'), (snap) => {
                 voters = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 if(currentUserData) {
                     currentUserData = voters.find(v => v.nisn === currentUserData.nisn);
@@ -229,22 +245,21 @@
                 }
                 renderAdminUI();
             });
-        });
+        }
 
-        initApp();
-
-        document.getElementById('btn-submit-login').onclick = async () => {
-            const userVal = document.getElementById('login-user').value;
-            const passVal = document.getElementById('login-pass').value;
+        /** LOGIN **/
+        document.getElementById('btn-submit-login').onclick = () => {
+            const userVal = document.getElementById('login-user').value.trim();
+            const passVal = document.getElementById('login-pass').value.trim();
             const errorEl = document.getElementById('login-error');
             errorEl.classList.add('hidden');
 
-            if(currentRole === 'admin') {
+            if(window.currentRole === 'admin') {
                 if(userVal === 'admin' && passVal === 'adminosis2024') {
                     document.getElementById('view-login').classList.add('hidden');
                     document.getElementById('view-admin').classList.remove('hidden');
                 } else {
-                    errorEl.innerText = "Username/Password Admin Salah!";
+                    errorEl.innerText = "Kredensial Admin Salah!";
                     errorEl.classList.remove('hidden');
                 }
             } else {
@@ -256,149 +271,107 @@
                     document.getElementById('voter-name-display').innerText = voter.name;
                     renderVoterUI();
                 } else {
-                    errorEl.innerText = "NISN atau Password Tidak Ditemukan!";
+                    errorEl.innerText = "NISN atau Password Salah!";
                     errorEl.classList.remove('hidden');
                 }
             }
         };
 
-        document.getElementById('btn-save-candidate').onclick = async () => {
-            if (!auth.currentUser) return;
-            const name = document.getElementById('c-name').value;
-            const photo = document.getElementById('c-photo').value || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
-            const vision = document.getElementById('c-vision').value;
-            if(!name || !vision) return;
+        /** VOTE ACTION **/
+        window.submitVote = async (candId) => {
+            if (!currentUserData || currentUserData.hasVoted) return;
+            try {
+                await runTransaction(db, async (t) => {
+                    const cRef = doc(db, 'artifacts', appId, 'public', 'data', 'candidates', candId);
+                    const vRef = doc(db, 'artifacts', appId, 'public', 'data', 'voters', currentUserData.nisn);
+                    const cDoc = await t.get(cRef);
+                    if(!cDoc.exists()) return;
+                    t.update(cRef, { votes: (cDoc.data().votes || 0) + 1 });
+                    t.update(vRef, { hasVoted: true, votedFor: candId });
+                });
+            } catch (e) { console.error(e); }
+        };
 
-            const ref = doc(collection(db, 'artifacts', appId, 'public', 'data', 'candidates'));
-            await setDoc(ref, { name, photo, vision, votes: 0 });
-            document.querySelectorAll('#c-name, #c-photo, #c-vision').forEach(i => i.value = '');
+        /** ADMIN ACTIONS **/
+        document.getElementById('btn-save-candidate').onclick = async () => {
+            const name = document.getElementById('c-name').value;
+            const vision = document.getElementById('c-vision').value;
+            const photoUrl = document.getElementById('c-photo').value;
+            if(!name || !vision) return;
+            
+            // Jika photoUrl kosong, pakai API avatar otomatis
+            const finalPhoto = photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff&size=256`;
+            
+            await setDoc(doc(collection(db, 'artifacts', appId, 'public', 'data', 'candidates')), { 
+                name, vision, votes: 0, photo: finalPhoto
+            });
+            document.getElementById('c-name').value = ''; 
+            document.getElementById('c-vision').value = '';
+            document.getElementById('c-photo').value = '';
         };
 
         document.getElementById('btn-save-voter').onclick = async () => {
-            if (!auth.currentUser) return;
             const name = document.getElementById('v-name').value;
             const nisn = document.getElementById('v-nisn').value.toString();
             const pass = document.getElementById('v-pass').value;
             if(!name || !nisn || !pass) return;
-
             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'voters', nisn), { 
                 name, nisn, password: pass, hasVoted: false, votedFor: null 
             });
             document.querySelectorAll('#v-name, #v-nisn, #v-pass').forEach(i => i.value = '');
         };
 
-        // LOKIGA BARU: Hapus siswa sekaligus kurangi suara kandidat
-        window.deleteVoter = async (nisn) => {
-            if (!auth.currentUser) return;
-            const voter = voters.find(v => v.nisn === nisn);
-            if(!voter) return;
-
-            if(confirm(`Hapus ${voter.name}? Jika siswa ini sudah memilih, suara kandidat terkait akan otomatis dikurangi.`)) {
-                try {
-                    await runTransaction(db, async (transaction) => {
-                        // Jika sudah memilih, kurangi suara kandidat
-                        if(voter.hasVoted && voter.votedFor) {
-                            const candRef = doc(db, 'artifacts', appId, 'public', 'data', 'candidates', voter.votedFor);
-                            const candDoc = await transaction.get(candRef);
-                            if(candDoc.exists()) {
-                                const newVotes = Math.max(0, (candDoc.data().votes || 0) - 1);
-                                transaction.update(candRef, { votes: newVotes });
-                            }
-                        }
-                        // Hapus data pemilih
-                        const voterRef = doc(db, 'artifacts', appId, 'public', 'data', 'voters', nisn);
-                        transaction.delete(voterRef);
-                    });
-                } catch (e) {
-                    console.error("Gagal menghapus pemilih:", e);
-                }
-            }
-        };
-
-        // LOGIKA BARU: Simpan ID kandidat di data siswa agar bisa dilacak
-        window.submitVote = async (candId) => {
-            if (!auth.currentUser || !currentUserData || currentUserData.hasVoted) return;
-            
-            try {
-                await runTransaction(db, async (transaction) => {
-                    const candRef = doc(db, 'artifacts', appId, 'public', 'data', 'candidates', candId);
-                    const voterRef = doc(db, 'artifacts', appId, 'public', 'data', 'voters', currentUserData.nisn);
-                    
-                    const candDoc = await transaction.get(candRef);
-                    if(!candDoc.exists()) return;
-
-                    transaction.update(candRef, { votes: (candDoc.data().votes || 0) + 1 });
-                    transaction.update(voterRef, { hasVoted: true, votedFor: candId }); // Catat siapa yang dipilih
-                });
-            } catch (e) {
-                console.error("Gagal mengirim suara:", e);
-            }
-        };
-
+        /** RENDERERS **/
         function renderAdminUI() {
             const stats = document.getElementById('admin-vote-stats');
-            const totalVotes = candidates.reduce((acc, curr) => acc + (curr.votes || 0), 0);
-            
+            const total = candidates.reduce((a, b) => a + (b.votes || 0), 0);
             if(stats) {
                 stats.innerHTML = candidates.map(c => {
-                    const perc = totalVotes > 0 ? Math.round((c.votes / totalVotes) * 100) : 0;
-                    return `
-                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                            <div class="flex justify-between text-[10px] font-black mb-2">
-                                <span class="uppercase">${c.name}</span>
-                                <span class="text-indigo-600">${c.votes} Suara (${perc}%)</span>
-                            </div>
-                            <div class="w-full bg-white h-2 rounded-full overflow-hidden">
-                                <div class="bg-indigo-600 h-full transition-all duration-700" style="width: ${perc}%"></div>
-                            </div>
+                    const p = total > 0 ? Math.round((c.votes/total)*100) : 0;
+                    return `<div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm">
+                        <div class="flex items-center gap-3 mb-3">
+                             <img src="${c.photo || 'https://ui-avatars.com/api/?name='+encodeURIComponent(c.name)}" class="w-8 h-8 rounded-full border border-slate-200">
+                             <div class="flex-1 flex justify-between text-[10px] font-black uppercase">
+                                <span>${c.name}</span>
+                                <span class="text-indigo-600">${c.votes} Suara (${p}%)</span>
+                             </div>
                         </div>
-                    `;
-                }).join('') || '<p class="text-xs italic text-slate-300">Belum ada kandidat</p>';
+                        <div class="w-full bg-white h-2 rounded-full overflow-hidden border border-slate-100"><div class="bg-indigo-600 h-full transition-all duration-1000" style="width:${p}%"></div></div>
+                    </div>`;
+                }).join('') || '<p class="text-xs text-center text-slate-300">Belum ada data kandidat</p>';
             }
-
-            const voterList = document.getElementById('admin-voter-list');
-            if(voterList) {
-                document.getElementById('voter-count').innerText = voters.length;
-                voterList.innerHTML = voters.map(v => `
-                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-white">
-                        <div>
-                            <p class="font-bold text-[11px]">${v.name}</p>
-                            <p class="text-[9px] text-slate-400">NISN: ${v.nisn}</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-[8px] font-black uppercase ${v.hasVoted ? 'text-green-500' : 'text-slate-300'}">
-                                ${v.hasVoted ? 'Sudah Memilih' : 'Belum'}
-                            </span>
-                            <button onclick="deleteVoter('${v.nisn}')" class="text-red-300 hover:text-red-500 font-bold ml-2">✕</button>
-                        </div>
-                    </div>
-                `).join('');
+            const list = document.getElementById('admin-voter-list');
+            if(list) {
+                list.innerHTML = voters.map(v => `<div class="p-3 bg-slate-50 rounded-xl text-[10px] flex justify-between items-center border border-white">
+                    <span><b class="text-slate-700">${v.name}</b> <br> <span class="text-slate-400">NISN: ${v.nisn}</span></span>
+                    <span class="${v.hasVoted ? 'text-green-500 bg-green-50' : 'text-slate-300 bg-slate-100'} font-black px-2 py-1 rounded-md text-[8px] uppercase">${v.hasVoted ? 'Sudah Memilih' : 'Belum Memilih'}</span>
+                </div>`).join('');
             }
         }
 
         function renderVoterUI() {
             const container = document.getElementById('voter-candidates');
-            if(!container || !currentUserData) return;
-
+            if(!container) return;
+            
             if(currentUserData.hasVoted) {
-                container.innerHTML = `
-                    <div class="bg-white p-12 rounded-[3rem] text-center shadow-2xl border border-white">
-                        <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6">✓</div>
-                        <h3 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">SUARA TERKIRIM</h3>
-                        <p class="text-slate-400 mt-2 text-sm leading-relaxed">Pilihan Anda sudah tercatat di sistem kami.</p>
-                        <button onclick="logout()" class="mt-8 px-8 py-3 bg-slate-100 text-slate-500 rounded-2xl font-bold text-xs">Keluar Sekarang</button>
-                    </div>
-                `;
+                container.innerHTML = `<div class="bg-white p-10 rounded-[3rem] text-center shadow-2xl border border-white">
+                    <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
+                    <h3 class="font-black text-slate-800 text-xl tracking-tight">TERIMA KASIH!</h3>
+                    <p class="text-xs text-slate-400 mt-2">Suara Anda telah resmi tersimpan dalam sistem.</p>
+                    <button onclick="logout()" class="mt-8 px-8 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold text-[10px] uppercase tracking-wider">Keluar Sesi</button>
+                </div>`;
             } else {
                 container.innerHTML = candidates.map((c, i) => `
-                    <div class="bg-white rounded-[2.5rem] overflow-hidden shadow-xl border border-white flex flex-col">
-                        <img src="${c.photo}" class="w-full h-48 object-cover">
-                        <div class="p-8 text-center flex-1">
-                            <span class="text-[10px] font-black text-indigo-500 bg-indigo-50 px-4 py-1 rounded-full uppercase tracking-widest">Kandidat 0${i+1}</span>
-                            <h3 class="text-2xl font-black text-slate-800 mt-2 tracking-tight">${c.name}</h3>
-                            <p class="text-slate-400 text-sm mt-3 mb-8 italic">"${c.vision}"</p>
-                            <button onclick="submitVote('${c.id}')" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-lg shadow-slate-200">Pilih Kandidat</button>
+                    <div class="bg-white rounded-[2.5rem] overflow-hidden shadow-xl border border-white p-6 text-center transform transition-all active:scale-95">
+                        <div class="w-24 h-24 bg-indigo-50 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden border-2 border-indigo-100 shadow-inner">
+                            <img src="${c.photo || 'https://ui-avatars.com/api/?name='+encodeURIComponent(c.name)}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=random'">
                         </div>
+                        <span class="text-[9px] font-black text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-widest">Kandidat 0${i+1}</span>
+                        <h3 class="text-xl font-black text-slate-800 mt-2">${c.name}</h3>
+                        <p class="text-xs text-slate-400 my-4 leading-relaxed line-clamp-3">"${c.vision}"</p>
+                        <button onclick="submitVote('${c.id}')" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-100">Berikan Suara</button>
                     </div>
                 `).join('');
             }
