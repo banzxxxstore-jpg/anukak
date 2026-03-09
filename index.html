@@ -18,7 +18,6 @@
         }
         .loading-hidden { opacity: 0; pointer-events: none; visibility: hidden; transition: all 0.5s ease; }
         
-        /* Custom scrollbar untuk tabel */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
@@ -30,7 +29,7 @@
     <div id="auth-loading">
         <div class="flex flex-col items-center">
             <div class="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Menghubungkan ke Database...</p>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Sinkronisasi Database...</p>
         </div>
     </div>
 
@@ -42,7 +41,7 @@
                     <span class="text-4xl">🗳️</span>
                 </div>
                 <h1 class="text-3xl font-black tracking-tighter uppercase italic text-slate-900">E-VOTE <span class="text-indigo-600">OSIS</span></h1>
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Digital Voting System v3.3</p>
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Digital Voting System v3.4</p>
             </div>
 
             <button onclick="openLogin('voter')" class="w-full bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-white flex items-center gap-5 active:scale-95 transition-transform">
@@ -68,7 +67,6 @@
                 <button onclick="goBack()" class="text-[10px] font-black mb-8 block uppercase tracking-widest opacity-60">← Kembali</button>
                 <h2 class="text-2xl font-black mb-6 tracking-tighter" id="login-title">Portal Akses</h2>
                 <div class="space-y-4">
-                    <!-- FIX: Menambahkan class text-slate-900 agar teks input selalu terlihat -->
                     <input id="login-user" type="text" placeholder="Username / NISN" class="w-full p-4 rounded-2xl bg-white text-slate-900 border-none outline-none focus:ring-2 focus:ring-indigo-500 font-bold shadow-sm text-sm">
                     <input id="login-pass" type="password" placeholder="Password" class="w-full p-4 rounded-2xl bg-white text-slate-900 border-none outline-none focus:ring-2 focus:ring-indigo-500 font-bold shadow-sm text-sm">
                     <p id="login-error" class="hidden text-red-500 text-[10px] font-bold text-center bg-red-50 p-3 rounded-xl border border-red-100"></p>
@@ -90,7 +88,7 @@
         </div>
 
         <!-- Screen: Admin -->
-        <div id="view-admin" class="hidden max-w-6xl mx-auto py-4">
+        <div id="view-admin" class="hidden max-w-7xl mx-auto py-4">
             <div class="flex justify-between items-center bg-white p-4 rounded-3xl shadow-sm border border-white mb-6 mx-2 px-6">
                 <h2 class="font-black text-slate-800 uppercase text-[10px] tracking-widest italic">Admin Dashboard</h2>
                 <button onclick="location.reload()" class="text-[10px] font-black text-red-500 bg-red-50 px-4 py-2 rounded-xl uppercase">Logout</button>
@@ -117,7 +115,7 @@
                 </div>
 
                 <!-- Col 3: Data Pemilih -->
-                <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-white">
+                <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-white overflow-hidden">
                     <h3 class="font-black text-[10px] text-slate-400 uppercase mb-4 tracking-widest">Registrasi Pemilih</h3>
                     <div class="grid grid-cols-1 gap-2 mb-4">
                         <input id="new-v-name" placeholder="Nama Siswa" class="p-3 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100 text-slate-900">
@@ -127,7 +125,10 @@
                         </div>
                     </div>
                     <button id="save-voter-btn" class="w-full bg-slate-900 text-white p-3 rounded-xl font-bold text-[10px] uppercase tracking-widest mb-6 hover:bg-black transition-colors">Tambah Siswa</button>
-                    <div id="voter-table" class="space-y-2 max-h-[300px] overflow-y-auto pr-2"></div>
+                    
+                    <div class="mt-4 border-t border-slate-50 pt-4">
+                        <div id="voter-table" class="space-y-2 max-h-[400px] overflow-y-auto pr-2"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -135,7 +136,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, collection, onSnapshot, runTransaction, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, collection, onSnapshot, runTransaction, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -190,7 +191,7 @@
             });
         }
 
-        /** NAVIGATION & LOGIN **/
+        /** LOGIN & NAV **/
         window.openLogin = (role) => {
             window.activeRole = role;
             document.getElementById('view-selection').classList.add('hidden');
@@ -198,7 +199,6 @@
             const card = document.getElementById('login-card');
             const btn = document.getElementById('btn-do-login');
             
-            // Bersihkan input lama
             document.getElementById('login-user').value = "";
             document.getElementById('login-pass').value = "";
             
@@ -245,31 +245,61 @@
             }
         };
 
-        /** VOTING SYSTEM **/
-        window.processVote = async (id) => {
+        /** VOTING CORE **/
+        window.processVote = async (candId) => {
             if (!currentUser || currentUser.hasVoted) return;
-            const cRef = doc(db, 'artifacts', appId, 'public', 'data', 'candidates', id);
+            const cRef = doc(db, 'artifacts', appId, 'public', 'data', 'candidates', candId);
             const vRef = doc(db, 'artifacts', appId, 'public', 'data', 'voters', currentUser.nisn);
 
             try {
                 await runTransaction(db, async (tx) => {
                     const cDoc = await tx.get(cRef);
                     tx.update(cRef, { votes: (cDoc.data().votes || 0) + 1 });
-                    tx.update(vRef, { hasVoted: true, votedFor: id });
+                    tx.update(vRef, { hasVoted: true, votedFor: candId });
                 });
             } catch (e) { console.error(e); }
         };
 
         /** ADMIN ACTIONS **/
+        window.deleteVoter = async (nisn) => {
+            const voter = voters.find(v => v.nisn === nisn);
+            if (!voter) return;
+            
+            if (confirm(`Hapus pemilih ${voter.name}? Jika ia sudah memilih, suaranya akan ditarik kembali.`)) {
+                try {
+                    await runTransaction(db, async (tx) => {
+                        // Jika voter sudah memilih, kurangi suara kandidat terkait
+                        if (voter.hasVoted && voter.votedFor) {
+                            const cRef = doc(db, 'artifacts', appId, 'public', 'data', 'candidates', voter.votedFor);
+                            const cDoc = await tx.get(cRef);
+                            if (cDoc.exists()) {
+                                const currentVotes = cDoc.data().votes || 0;
+                                tx.update(cRef, { votes: Math.max(0, currentVotes - 1) });
+                            }
+                        }
+                        // Hapus dokumen voter
+                        const vRef = doc(db, 'artifacts', appId, 'public', 'data', 'voters', nisn);
+                        tx.delete(vRef);
+                    });
+                } catch (e) {
+                    console.error("Gagal menghapus pemilih:", e);
+                    alert("Gagal menghapus data. Silakan coba lagi.");
+                }
+            }
+        };
+
+        window.deleteCandidate = async (id) => {
+            if(confirm("Hapus kandidat ini secara permanen?")) {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'candidates', id));
+            }
+        };
+
         document.getElementById('save-candidate-btn').onclick = async () => {
             const name = document.getElementById('new-c-name').value;
             const imgUrl = document.getElementById('new-c-img').value;
             const vision = document.getElementById('new-c-vision').value;
             if(!name || !vision) return;
-            
-            // Gunakan avatar sebagai fallback jika URL kosong
             const finalImg = imgUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff&size=128`;
-            
             await setDoc(doc(collection(db, 'artifacts', appId, 'public', 'data', 'candidates')), { 
                 name, vision, votes: 0, img: finalImg 
             });
@@ -283,20 +313,17 @@
             const ni = document.getElementById('new-v-nisn').value;
             const pa = document.getElementById('new-v-pass').value;
             if(!n || !ni || !pa) return;
-            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'voters', ni), { name: n, nisn: ni, password: pa, hasVoted: false });
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'voters', ni), { 
+                name: n, nisn: ni, password: pa, hasVoted: false, votedFor: null 
+            });
             document.getElementById('new-v-name').value = ""; 
             document.getElementById('new-v-nisn').value = ""; 
             document.getElementById('new-v-pass').value = "";
         };
 
-        window.deleteCandidate = async (id) => {
-            if(confirm("Hapus kandidat ini?")) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'candidates', id));
-            }
-        };
-
         /** RENDER UI **/
         function updateAdminDisplay() {
+            // Stats
             const stats = document.getElementById('vote-stats-container');
             const total = candidates.reduce((a, b) => a + (b.votes || 0), 0);
             if (stats) {
@@ -305,7 +332,7 @@
                     return `<div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 relative group">
                         <button onclick="deleteCandidate('${c.id}')" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all text-[10px] font-bold">Hapus</button>
                         <div class="flex items-center gap-3 mb-3">
-                            <img src="${c.img}" class="w-8 h-8 rounded-lg object-cover bg-indigo-100">
+                            <img src="${c.img}" class="w-8 h-8 rounded-lg object-cover bg-indigo-100 shadow-sm">
                             <div class="flex-1">
                                 <div class="flex justify-between text-[10px] font-black uppercase">
                                     <span class="truncate pr-2">${c.name}</span>
@@ -318,22 +345,30 @@
                             <div class="bg-indigo-600 h-full transition-all duration-700" style="width:${pct}%"></div>
                         </div>
                     </div>`;
-                }).join('') || '<p class="text-[10px] text-center py-8 text-slate-400 font-bold uppercase italic">Belum ada kandidat</p>';
+                }).join('') || '<p class="text-[10px] text-center py-8 text-slate-400 font-bold italic">Belum ada kandidat</p>';
             }
             
+            // Voter Table
             const table = document.getElementById('voter-table');
             if (table) {
                 table.innerHTML = voters.map(v => `
-                    <div class="p-3 bg-slate-50 rounded-xl flex justify-between items-center border border-slate-100">
-                        <div class="text-left">
-                            <p class="text-[10px] font-black text-slate-800">${v.name}</p>
-                            <p class="text-[8px] text-slate-400 font-bold tracking-widest">${v.nisn}</p>
+                    <div class="p-3 bg-slate-50 rounded-xl flex justify-between items-center border border-slate-100 group">
+                        <div class="text-left flex-1">
+                            <p class="text-[10px] font-black text-slate-800 uppercase tracking-tight">${v.name}</p>
+                            <p class="text-[8px] text-slate-400 font-bold tracking-widest">${v.nisn} • Pw: ${v.password}</p>
                         </div>
-                        <div class="text-[8px] font-black px-3 py-1 rounded-full ${v.hasVoted ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'} uppercase tracking-tight">
-                            ${v.hasVoted ? 'Sudah Memilih' : 'Belum Memilih'}
+                        <div class="flex items-center gap-3">
+                            <div class="text-[7px] font-black px-2 py-0.5 rounded-full ${v.hasVoted ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'} uppercase tracking-tighter">
+                                ${v.hasVoted ? 'Sudah' : 'Belum'}
+                            </div>
+                            <button onclick="deleteVoter('${v.nisn}')" class="w-7 h-7 bg-red-50 text-red-400 rounded-lg flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
-                `).join('');
+                `).join('') || '<p class="text-[10px] text-center py-4 text-slate-400 font-bold uppercase">Belum ada pemilih</p>';
             }
         }
 
@@ -342,8 +377,8 @@
             if (currentUser.hasVoted) {
                 list.innerHTML = `<div class="bg-white p-10 rounded-[3rem] text-center shadow-xl border border-white mt-10">
                     <div class="text-5xl mb-6">✨</div>
-                    <h3 class="font-black text-slate-800 text-xl uppercase tracking-tighter">Voting Selesai!</h3>
-                    <p class="text-[11px] text-slate-400 mt-2 font-medium leading-relaxed">Terima kasih ${currentUser.name}, suara Anda telah kami rekam di sistem pusat secara aman.</p>
+                    <h3 class="font-black text-slate-800 text-xl uppercase tracking-tighter">Voting Berhasil!</h3>
+                    <p class="text-[11px] text-slate-400 mt-2 font-medium leading-relaxed">Terima kasih ${currentUser.name}, pilihan Anda telah masuk ke sistem.</p>
                     <button onclick="location.reload()" class="mt-8 text-[10px] font-black text-indigo-600 uppercase tracking-widest">Logout Sesi</button>
                 </div>`;
                 return;
@@ -356,7 +391,7 @@
                     </div>
                     <h3 class="text-lg font-black text-slate-800 leading-tight">${c.name}</h3>
                     <p class="text-[10px] text-slate-400 my-4 leading-relaxed font-medium italic">"${c.vision}"</p>
-                    <button onclick="processVote('${c.id}')" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-indigo-100">Gunakan Suara</button>
+                    <button onclick="processVote('${c.id}')" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-indigo-100">Pilih Paslon 0${i+1}</button>
                 </div>
             `).join('');
         }
