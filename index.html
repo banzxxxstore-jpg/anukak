@@ -17,6 +17,11 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
         }
         .loading-hidden { opacity: 0; pointer-events: none; visibility: hidden; transition: all 0.5s ease; }
+        
+        /* Custom scrollbar untuk tabel */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     </style>
 </head>
 <body class="mesh-bg min-h-screen text-slate-900 antialiased p-4">
@@ -29,7 +34,6 @@
         </div>
     </div>
 
-    <!-- Main App Container (Hidden during load) -->
     <div id="main-app" class="hidden">
         <!-- Screen: Selection -->
         <div id="view-selection" class="min-h-[85vh] flex flex-col items-center justify-center space-y-6 max-w-sm mx-auto">
@@ -38,7 +42,7 @@
                     <span class="text-4xl">🗳️</span>
                 </div>
                 <h1 class="text-3xl font-black tracking-tighter uppercase italic text-slate-900">E-VOTE <span class="text-indigo-600">OSIS</span></h1>
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Digital Voting System v3.2</p>
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Digital Voting System v3.3</p>
             </div>
 
             <button onclick="openLogin('voter')" class="w-full bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-white flex items-center gap-5 active:scale-95 transition-transform">
@@ -61,13 +65,14 @@
         <!-- Screen: Login Form -->
         <div id="view-login" class="hidden min-h-[85vh] flex items-center justify-center">
             <div id="login-card" class="p-8 rounded-[3rem] shadow-2xl w-full max-w-sm border transition-all">
-                <button onclick="goBack()" class="text-[10px] font-black mb-8 block opacity-40 uppercase tracking-widest">← Kembali</button>
+                <button onclick="goBack()" class="text-[10px] font-black mb-8 block uppercase tracking-widest opacity-60">← Kembali</button>
                 <h2 class="text-2xl font-black mb-6 tracking-tighter" id="login-title">Portal Akses</h2>
                 <div class="space-y-4">
-                    <input id="login-user" type="text" placeholder="Username / NISN" class="w-full p-4 rounded-2xl border-none outline-none focus:ring-2 font-bold shadow-sm text-sm">
-                    <input id="login-pass" type="password" placeholder="Password" class="w-full p-4 rounded-2xl border-none outline-none focus:ring-2 font-bold shadow-sm text-sm">
+                    <!-- FIX: Menambahkan class text-slate-900 agar teks input selalu terlihat -->
+                    <input id="login-user" type="text" placeholder="Username / NISN" class="w-full p-4 rounded-2xl bg-white text-slate-900 border-none outline-none focus:ring-2 focus:ring-indigo-500 font-bold shadow-sm text-sm">
+                    <input id="login-pass" type="password" placeholder="Password" class="w-full p-4 rounded-2xl bg-white text-slate-900 border-none outline-none focus:ring-2 focus:ring-indigo-500 font-bold shadow-sm text-sm">
                     <p id="login-error" class="hidden text-red-500 text-[10px] font-bold text-center bg-red-50 p-3 rounded-xl border border-red-100"></p>
-                    <button id="btn-do-login" class="w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">Konfirmasi Masuk</button>
+                    <button id="btn-do-login" class="w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95">Konfirmasi Masuk</button>
                 </div>
             </div>
         </div>
@@ -85,36 +90,44 @@
         </div>
 
         <!-- Screen: Admin -->
-        <div id="view-admin" class="hidden max-w-5xl mx-auto py-4">
+        <div id="view-admin" class="hidden max-w-6xl mx-auto py-4">
             <div class="flex justify-between items-center bg-white p-4 rounded-3xl shadow-sm border border-white mb-6 mx-2 px-6">
                 <h2 class="font-black text-slate-800 uppercase text-[10px] tracking-widest italic">Admin Dashboard</h2>
                 <button onclick="location.reload()" class="text-[10px] font-black text-red-500 bg-red-50 px-4 py-2 rounded-xl uppercase">Logout</button>
             </div>
             
-            <div class="grid lg:grid-cols-2 gap-6 px-2">
+            <div class="grid lg:grid-cols-3 gap-6 px-2">
+                <!-- Col 1: Stats -->
                 <div class="space-y-6">
                     <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-white">
-                        <h3 class="font-black text-[10px] text-slate-400 uppercase mb-4 tracking-widest">Perolehan Suara</h3>
+                        <h3 class="font-black text-[10px] text-slate-400 uppercase mb-4 tracking-widest">Hasil Voting</h3>
                         <div id="vote-stats-container" class="space-y-4"></div>
                     </div>
-                    <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-white">
-                        <h3 class="font-black text-[10px] text-slate-400 uppercase mb-4 tracking-widest">Input Kandidat Baru</h3>
-                        <div class="space-y-3">
-                            <input id="new-c-name" placeholder="Nama Lengkap" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold outline-none border border-slate-100">
-                            <textarea id="new-c-vision" placeholder="Visi & Misi Ringkas" class="w-full p-3 bg-slate-50 rounded-xl text-xs outline-none h-20 border border-slate-100"></textarea>
-                            <button id="save-candidate-btn" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold text-[10px] uppercase tracking-widest">Simpan Data</button>
-                        </div>
+                </div>
+
+                <!-- Col 2: Input Kandidat -->
+                <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-white">
+                    <h3 class="font-black text-[10px] text-slate-400 uppercase mb-4 tracking-widest">Kelola Kandidat</h3>
+                    <div class="space-y-3">
+                        <input id="new-c-name" placeholder="Nama Lengkap" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold outline-none border border-slate-100 text-slate-900">
+                        <input id="new-c-img" placeholder="URL Foto (Contoh: https://...)" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold outline-none border border-slate-100 text-slate-900">
+                        <textarea id="new-c-vision" placeholder="Visi & Misi Singkas" class="w-full p-3 bg-slate-50 rounded-xl text-xs outline-none h-24 border border-slate-100 text-slate-900"></textarea>
+                        <button id="save-candidate-btn" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-colors">Simpan Paslon</button>
                     </div>
                 </div>
+
+                <!-- Col 3: Data Pemilih -->
                 <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-white">
                     <h3 class="font-black text-[10px] text-slate-400 uppercase mb-4 tracking-widest">Registrasi Pemilih</h3>
-                    <div class="grid grid-cols-2 gap-2 mb-4">
-                        <input id="new-v-name" placeholder="Nama Siswa" class="col-span-2 p-3 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100">
-                        <input id="new-v-nisn" placeholder="NISN" class="p-3 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100">
-                        <input id="new-v-pass" placeholder="Password" class="p-3 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100">
+                    <div class="grid grid-cols-1 gap-2 mb-4">
+                        <input id="new-v-name" placeholder="Nama Siswa" class="p-3 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100 text-slate-900">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input id="new-v-nisn" placeholder="NISN" class="p-3 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100 text-slate-900">
+                            <input id="new-v-pass" placeholder="Password" class="p-3 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100 text-slate-900">
+                        </div>
                     </div>
-                    <button id="save-voter-btn" class="w-full bg-slate-900 text-white p-3 rounded-xl font-bold text-[10px] uppercase tracking-widest mb-6">Tambahkan Siswa</button>
-                    <div id="voter-table" class="space-y-2 max-h-[400px] overflow-y-auto pr-2"></div>
+                    <button id="save-voter-btn" class="w-full bg-slate-900 text-white p-3 rounded-xl font-bold text-[10px] uppercase tracking-widest mb-6 hover:bg-black transition-colors">Tambah Siswa</button>
+                    <div id="voter-table" class="space-y-2 max-h-[300px] overflow-y-auto pr-2"></div>
                 </div>
             </div>
         </div>
@@ -122,10 +135,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, collection, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, collection, onSnapshot, runTransaction, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-        // CONFIG ANDA - SEKARANG HARDCODED AGAR LANGSUNG JALAN
         const firebaseConfig = {
             apiKey: "AIzaSyDFD_ZOL4RAyaadaGdk5PJb8BIwG6GInOE",
             authDomain: "testsaja-39ab7.firebaseapp.com",
@@ -136,13 +148,12 @@
             measurementId: "G-VSQ3SHGHQL"
         };
 
-        const appId = "osis-v3-final"; // ID aplikasi unik di Firestore
+        const appId = "osis-v3-final";
         let db, auth;
         let candidates = [];
         let voters = [];
         let currentUser = null;
 
-        // Inisialisasi
         try {
             const app = initializeApp(firebaseConfig);
             db = getFirestore(app);
@@ -150,25 +161,16 @@
 
             onAuthStateChanged(auth, (user) => {
                 if (user) {
-                    console.log("Database Connected as:", user.uid);
                     startSyncing();
                     document.getElementById('auth-loading').classList.add('loading-hidden');
                     document.getElementById('main-app').classList.remove('hidden');
                 }
             });
 
-            // Langsung login tanpa nunggu config dari luar
-            signInAnonymously(auth).catch(err => {
-                console.error("Gagal Login Anonim:", err);
-                alert("Gagal terhubung ke database. Pastikan internet aktif.");
-            });
-
-        } catch (err) {
-            console.error("Firebase Init Error:", err);
-        }
+            signInAnonymously(auth);
+        } catch (err) { console.error(err); }
 
         function startSyncing() {
-            // Path sesuai standar keamanan: /artifacts/{appId}/public/data/{collection}
             const cCol = collection(db, 'artifacts', appId, 'public', 'data', 'candidates');
             const vCol = collection(db, 'artifacts', appId, 'public', 'data', 'voters');
 
@@ -188,13 +190,17 @@
             });
         }
 
-        /** UI LOGIC **/
+        /** NAVIGATION & LOGIN **/
         window.openLogin = (role) => {
             window.activeRole = role;
             document.getElementById('view-selection').classList.add('hidden');
             document.getElementById('view-login').classList.remove('hidden');
             const card = document.getElementById('login-card');
             const btn = document.getElementById('btn-do-login');
+            
+            // Bersihkan input lama
+            document.getElementById('login-user').value = "";
+            document.getElementById('login-pass').value = "";
             
             if (role === 'admin') {
                 card.className = "bg-slate-900 p-8 rounded-[3rem] shadow-2xl w-full max-w-sm text-white border-slate-800";
@@ -233,12 +239,13 @@
                     document.getElementById('display-voter-name').innerText = match.name;
                     updateVoterDisplay();
                 } else {
-                    err.innerText = "NISN atau Password tidak ditemukan!";
+                    err.innerText = "NISN atau Password Salah!";
                     err.classList.remove('hidden');
                 }
             }
         };
 
+        /** VOTING SYSTEM **/
         window.processVote = async (id) => {
             if (!currentUser || currentUser.hasVoted) return;
             const cRef = doc(db, 'artifacts', appId, 'public', 'data', 'candidates', id);
@@ -250,18 +257,25 @@
                     tx.update(cRef, { votes: (cDoc.data().votes || 0) + 1 });
                     tx.update(vRef, { hasVoted: true, votedFor: id });
                 });
-            } catch (e) { alert("Error saat voting: " + e.message); }
+            } catch (e) { console.error(e); }
         };
 
+        /** ADMIN ACTIONS **/
         document.getElementById('save-candidate-btn').onclick = async () => {
             const name = document.getElementById('new-c-name').value;
+            const imgUrl = document.getElementById('new-c-img').value;
             const vision = document.getElementById('new-c-vision').value;
             if(!name || !vision) return;
+            
+            // Gunakan avatar sebagai fallback jika URL kosong
+            const finalImg = imgUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff&size=128`;
+            
             await setDoc(doc(collection(db, 'artifacts', appId, 'public', 'data', 'candidates')), { 
-                name, vision, votes: 0, 
-                img: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff` 
+                name, vision, votes: 0, img: finalImg 
             });
-            document.getElementById('new-c-name').value = ""; document.getElementById('new-c-vision').value = "";
+            document.getElementById('new-c-name').value = ""; 
+            document.getElementById('new-c-img').value = "";
+            document.getElementById('new-c-vision').value = "";
         };
 
         document.getElementById('save-voter-btn').onclick = async () => {
@@ -270,36 +284,53 @@
             const pa = document.getElementById('new-v-pass').value;
             if(!n || !ni || !pa) return;
             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'voters', ni), { name: n, nisn: ni, password: pa, hasVoted: false });
-            document.getElementById('new-v-name').value = ""; document.getElementById('new-v-nisn').value = ""; document.getElementById('new-v-pass').value = "";
+            document.getElementById('new-v-name').value = ""; 
+            document.getElementById('new-v-nisn').value = ""; 
+            document.getElementById('new-v-pass').value = "";
         };
 
+        window.deleteCandidate = async (id) => {
+            if(confirm("Hapus kandidat ini?")) {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'candidates', id));
+            }
+        };
+
+        /** RENDER UI **/
         function updateAdminDisplay() {
             const stats = document.getElementById('vote-stats-container');
             const total = candidates.reduce((a, b) => a + (b.votes || 0), 0);
             if (stats) {
                 stats.innerHTML = candidates.map(c => {
                     const pct = total > 0 ? Math.round((c.votes/total)*100) : 0;
-                    return `<div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <div class="flex justify-between text-[10px] font-black uppercase mb-2">
-                            <span>${c.name}</span>
-                            <span class="text-indigo-600">${c.votes} Suara (${pct}%)</span>
+                    return `<div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 relative group">
+                        <button onclick="deleteCandidate('${c.id}')" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all text-[10px] font-bold">Hapus</button>
+                        <div class="flex items-center gap-3 mb-3">
+                            <img src="${c.img}" class="w-8 h-8 rounded-lg object-cover bg-indigo-100">
+                            <div class="flex-1">
+                                <div class="flex justify-between text-[10px] font-black uppercase">
+                                    <span class="truncate pr-2">${c.name}</span>
+                                    <span class="text-indigo-600 shrink-0">${c.votes} Suara</span>
+                                </div>
+                                <p class="text-[8px] text-slate-400 font-bold">${pct}% Perolehan</p>
+                            </div>
                         </div>
-                        <div class="w-full bg-white h-2 rounded-full overflow-hidden">
-                            <div class="bg-indigo-600 h-full" style="width:${pct}%"></div>
+                        <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                            <div class="bg-indigo-600 h-full transition-all duration-700" style="width:${pct}%"></div>
                         </div>
                     </div>`;
-                }).join('') || '<p class="text-[10px] text-center py-4 italic">Belum ada kandidat</p>';
+                }).join('') || '<p class="text-[10px] text-center py-8 text-slate-400 font-bold uppercase italic">Belum ada kandidat</p>';
             }
+            
             const table = document.getElementById('voter-table');
             if (table) {
                 table.innerHTML = voters.map(v => `
                     <div class="p-3 bg-slate-50 rounded-xl flex justify-between items-center border border-slate-100">
                         <div class="text-left">
                             <p class="text-[10px] font-black text-slate-800">${v.name}</p>
-                            <p class="text-[8px] text-slate-400 font-bold">${v.nisn}</p>
+                            <p class="text-[8px] text-slate-400 font-bold tracking-widest">${v.nisn}</p>
                         </div>
-                        <div class="text-[8px] font-black px-3 py-1 rounded-full ${v.hasVoted ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'} uppercase">
-                            ${v.hasVoted ? 'Voted' : 'Pending'}
+                        <div class="text-[8px] font-black px-3 py-1 rounded-full ${v.hasVoted ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'} uppercase tracking-tight">
+                            ${v.hasVoted ? 'Sudah Memilih' : 'Belum Memilih'}
                         </div>
                     </div>
                 `).join('');
@@ -310,19 +341,22 @@
             const list = document.getElementById('candidate-list');
             if (currentUser.hasVoted) {
                 list.innerHTML = `<div class="bg-white p-10 rounded-[3rem] text-center shadow-xl border border-white mt-10">
-                    <div class="text-5xl mb-4">✅</div>
-                    <h3 class="font-black text-slate-800 text-xl uppercase tracking-tighter">Partisipasi Berhasil!</h3>
-                    <p class="text-[11px] text-slate-400 mt-2">Terima kasih telah menyalurkan suara Anda.</p>
+                    <div class="text-5xl mb-6">✨</div>
+                    <h3 class="font-black text-slate-800 text-xl uppercase tracking-tighter">Voting Selesai!</h3>
+                    <p class="text-[11px] text-slate-400 mt-2 font-medium leading-relaxed">Terima kasih ${currentUser.name}, suara Anda telah kami rekam di sistem pusat secara aman.</p>
+                    <button onclick="location.reload()" class="mt-8 text-[10px] font-black text-indigo-600 uppercase tracking-widest">Logout Sesi</button>
                 </div>`;
                 return;
             }
             list.innerHTML = candidates.map((c, i) => `
                 <div class="bg-white rounded-[2.5rem] shadow-xl border border-white p-6 flex flex-col items-center text-center">
-                    <img src="${c.img}" class="w-20 h-20 rounded-2xl mb-4 shadow-lg">
-                    <span class="text-[9px] font-black text-indigo-600 bg-indigo-50 px-4 py-1 rounded-full uppercase mb-2">Paslon 0${i+1}</span>
-                    <h3 class="text-lg font-black text-slate-800">${c.name}</h3>
+                    <div class="relative mb-4">
+                        <img src="${c.img}" class="w-24 h-24 rounded-3xl object-cover shadow-lg border-2 border-slate-50">
+                        <span class="absolute -bottom-2 -right-2 bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-black text-xs border-4 border-white">0${i+1}</span>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-800 leading-tight">${c.name}</h3>
                     <p class="text-[10px] text-slate-400 my-4 leading-relaxed font-medium italic">"${c.vision}"</p>
-                    <button onclick="processVote('${c.id}')" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest active:scale-95 transition-all">Pilih Kandidat</button>
+                    <button onclick="processVote('${c.id}')" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-indigo-100">Gunakan Suara</button>
                 </div>
             `).join('');
         }
